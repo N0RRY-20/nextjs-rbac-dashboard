@@ -65,7 +65,7 @@ export function SignupForm({
   async function onSubmit(values: SignupFormValues) {
     setIsPending(true);
     try {
-      const { data, error } = await authClient.signUp.email({
+      const { error } = await authClient.signUp.email({
         name: values.name,
         email: values.email,
         password: values.password,

@@ -69,7 +69,7 @@ async function seed() {
         .onConflictDoNothing();
 
       console.log(`✅ Created user: ${testUser.email} (${testUser.role})`);
-    } catch (error) {
+    } catch (_error) {
       console.log(`⚠️ User ${testUser.email} mungkin sudah ada, skip...`);
     }
   }
