@@ -72,9 +72,17 @@ export function LoginForm({
         toast.error(error.message || "Login gagal!");
         return;
       }
-
+      console.log("User data:", data);
       toast.success(`Selamat datang, ${data?.user?.name || "User"}!`);
-      router.push("/dashboard");
+
+      // Redirect ke dashboard sesuai role
+      const userRole = (data?.user as { role?: string })?.role || "user";
+      const roleRoutes: Record<string, string> = {
+        admin: "/admin/dashboard",
+        guru: "/guru/dashboard",
+        user: "/user/dashboard",
+      };
+      router.push(roleRoutes[userRole] || "/user/dashboard");
     } finally {
       setIsPending(false);
     }
