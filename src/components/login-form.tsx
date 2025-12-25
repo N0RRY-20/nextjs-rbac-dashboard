@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { z } from "zod";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +26,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 const loginFormSchema = z.object({
   email: z.string().email({
@@ -31,6 +38,7 @@ const loginFormSchema = z.object({
   password: z.string().min(1, {
     message: "Password wajib diisi.",
   }),
+  rememberMe: z.boolean(),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -39,17 +47,37 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   });
 
-  function onSubmit(values: LoginFormValues) {
-    // Handle form submission here
-    console.log(values);
+  async function onSubmit(values: LoginFormValues) {
+    setIsPending(true);
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe,
+      });
+
+      if (error) {
+        toast.error(error.message || "Login gagal!");
+        return;
+      }
+
+      toast.success(`Selamat datang, ${data?.user?.name || "User"}!`);
+      router.push("/dashboard");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -150,33 +178,57 @@ export function LoginForm({
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
-                  Login
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal cursor-pointer">
+                        Remember me
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending && <Spinner className="mr-2" />}
+                  {isPending ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </Form>
 
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <a
+              <Link
                 href="/signup"
                 className="underline underline-offset-4 hover:text-primary"
               >
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
         </CardContent>
       </Card>
       <p className="px-6 text-center text-sm text-muted-foreground">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
+        <Link
+          href="/terms"
+          className="underline underline-offset-4 hover:text-primary"
+        >
           Terms of Service
-        </a>{" "}
+        </Link>{" "}
         and{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
+        <Link
+          href="/privacy"
+          className="underline underline-offset-4 hover:text-primary"
+        >
           Privacy Policy
-        </a>
+        </Link>
         .
       </p>
     </div>

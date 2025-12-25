@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { z } from "zod";
 
 import { cn } from "@/lib/utils";
@@ -17,6 +20,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 const signupFormSchema = z
   .object({
@@ -44,6 +50,8 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
@@ -54,9 +62,25 @@ export function SignupForm({
     },
   });
 
-  function onSubmit(values: SignupFormValues) {
-    // Handle form submission here
-    console.log(values);
+  async function onSubmit(values: SignupFormValues) {
+    setIsPending(true);
+    try {
+      const { data, error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) {
+        toast.error(error.message || "Gagal membuat akun!");
+        return;
+      }
+
+      toast.success("Akun berhasil dibuat!");
+      router.push("/login");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -130,8 +154,9 @@ export function SignupForm({
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending && <Spinner className="mr-2" />}
+            {isPending ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
       </Form>
@@ -163,12 +188,12 @@ export function SignupForm({
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <a
+        <Link
           href="/login"
           className="underline underline-offset-4 hover:text-primary"
         >
           Sign in
-        </a>
+        </Link>
       </p>
     </div>
   );

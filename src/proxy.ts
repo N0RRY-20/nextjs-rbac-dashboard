@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 
 export async function proxy(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const { data: session } = await authClient.getSession();
 
-  // THIS IS NOT SECURE!
-  // This is the recommended approach to optimistically redirect users
-  // We recommend handling auth checks in each page/route
+  // Redirect to login if not authenticated
   if (!session) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
