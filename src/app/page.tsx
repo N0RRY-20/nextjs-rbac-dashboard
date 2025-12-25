@@ -1,5 +1,63 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { IconTestPipe, IconCopy, IconCheck } from "@tabler/icons-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+const demoAccounts = [
+  {
+    role: "Admin",
+    email: "admin@test.com",
+    password: "password123",
+    color: "bg-blue-500",
+  },
+  {
+    role: "Guru",
+    email: "guru@test.com",
+    password: "password123",
+    color: "bg-emerald-500",
+  },
+  {
+    role: "User",
+    email: "user@test.com",
+    password: "password123",
+    color: "bg-gray-500",
+  },
+];
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+      title="Copy"
+    >
+      {copied ? (
+        <IconCheck className="h-4 w-4 text-green-500" />
+      ) : (
+        <IconCopy className="h-4 w-4 text-muted-foreground" />
+      )}
+    </button>
+  );
+}
 
 export default function Home() {
   return (
@@ -50,6 +108,54 @@ export default function Home() {
           >
             Sign Up
           </Link>
+
+          {/* Demo Button with Dialog */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-solid border-orange-500 px-5 text-orange-500 transition-colors hover:bg-orange-500/10 md:w-[158px]">
+                <IconTestPipe className="h-5 w-5" />
+                Demo
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Demo Accounts</DialogTitle>
+                <DialogDescription>
+                  Gunakan akun berikut untuk mencoba fitur aplikasi.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-3 py-4">
+                {demoAccounts.map((account) => (
+                  <div
+                    key={account.role}
+                    className="flex items-center gap-4 rounded-lg border p-4"
+                  >
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${account.color} text-white font-bold`}
+                    >
+                      {account.role[0]}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="font-medium">{account.role}</div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="font-mono">{account.email}</span>
+                        <CopyButton text={account.email} />
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="font-mono">{account.password}</span>
+                        <CopyButton text={account.password} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Button asChild>
+                  <Link href="/login">Login Sekarang</Link>
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
